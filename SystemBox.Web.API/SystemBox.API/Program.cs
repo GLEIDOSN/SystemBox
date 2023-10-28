@@ -1,3 +1,7 @@
+using Microsoft.EntityFrameworkCore;
+using SystemBox.Data;
+using SystemBox.Ioc;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -6,6 +10,15 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddDbContext<SystemContext>(opt =>
+{
+    opt.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));
+});
+
+builder.Services.AddAutoMapper(typeof(Program));
+
+DependencyInjectionConfig.ConfigureServicesIoc(builder.Services);
 
 var app = builder.Build();
 
