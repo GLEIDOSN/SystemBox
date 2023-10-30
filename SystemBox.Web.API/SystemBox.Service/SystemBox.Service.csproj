@@ -6,4 +6,10 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\System.CustomExceptions\System.CustomExceptions.csproj" />
+    <ProjectReference Include="..\SystemBox.Data\SystemBox.Data.csproj" />
+    <ProjectReference Include="..\SystemBox.Domain\SystemBox.Domain.csproj" />
+  </ItemGroup>
+
 </Project>
