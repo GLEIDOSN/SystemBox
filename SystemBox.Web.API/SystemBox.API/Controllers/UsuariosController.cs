@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using SystemBox.API.Dtos;
+using SystemBox.Domain.Consts;
 using SystemBox.Domain.Models;
 using SystemBox.Service.Services;
 using static System.CustomExceptions.UsuariosCustomExceptions;
@@ -48,7 +49,7 @@ namespace SystemBox.API.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Ocorreu um erro interno no servidor. [{ex.Message}]");
+                return StatusCode(500, MsgErrorsConst.ErroInternoServidor(ex.Message));
             }
         }
 
@@ -69,7 +70,7 @@ namespace SystemBox.API.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Ocorreu um erro interno no servidor. [{ex.Message}]");
+                return StatusCode(500, MsgErrorsConst.ErroInternoServidor(ex.Message));
             }            
         }
 
@@ -90,7 +91,7 @@ namespace SystemBox.API.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Ocorreu um erro interno no servidor. [{ex.Message}]");
+                return StatusCode(500, MsgErrorsConst.ErroInternoServidor(ex.Message));
             }
         }
 
@@ -110,7 +111,7 @@ namespace SystemBox.API.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Ocorreu um erro interno no servidor. [{ex.Message}]");
+                return StatusCode(500, MsgErrorsConst.ErroInternoServidor(ex.Message));
             }
         }
     }

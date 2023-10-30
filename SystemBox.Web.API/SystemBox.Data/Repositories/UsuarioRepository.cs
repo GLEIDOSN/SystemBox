@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using SystemBox.Domain.Consts;
 using SystemBox.Domain.Models;
 
 namespace SystemBox.Data.Repositories
@@ -38,7 +39,7 @@ namespace SystemBox.Data.Repositories
             }
             catch (Exception ex)
             {
-                throw new Exception("Erro ao tentar criar Usuário: {0}", ex);
+                throw new Exception(MsgErrorsCrudConst.MsgErrorPost("Usuário", ex.Message));
             }
         }
 
@@ -57,7 +58,7 @@ namespace SystemBox.Data.Repositories
             }
             catch (Exception ex)
             {
-                throw new Exception("Erro ao tentar atualizar Usuário: {0}", ex);
+                throw new Exception(MsgErrorsCrudConst.MsgErrorUpdate("Usuário", ex.Message));
             }
         }
 
@@ -72,7 +73,7 @@ namespace SystemBox.Data.Repositories
             }
             catch(Exception ex)
             {
-                throw new Exception("Erro ao tentar deletar Usuário: {0}", ex);
+                throw new Exception(MsgErrorsCrudConst.MsgErrorDelete("Usuário", ex.Message));
             }
         }
     }

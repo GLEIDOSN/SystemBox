@@ -1,4 +1,5 @@
 ﻿using SystemBox.Data.Repositories;
+using SystemBox.Domain.Consts;
 using SystemBox.Domain.Models;
 using static System.CustomExceptions.UsuariosCustomExceptions;
 
@@ -20,7 +21,7 @@ namespace SystemBox.Service.Services
 
         public async Task<Usuario> GetByIdAsync(int id)
         {
-            var usuario = await _usuarioRepository.GetByIdAsync(id) ?? throw new UsuarioNaoExiste("Usuário não existe no banco de dados.");
+            var usuario = await _usuarioRepository.GetByIdAsync(id) ?? throw new UsuarioNaoExiste(UsuariosConsts.MsgUsuarioNaoExiste);
             
             return usuario;
         }
@@ -31,7 +32,7 @@ namespace SystemBox.Service.Services
 
             if (usuarioExiste != null)
             {
-                throw new UsuarioJaCadastradoException($"Nome de Usuário já cadastrado. [{usuario.NomeUsuario}]");
+                throw new UsuarioJaCadastradoException($"{UsuariosConsts.MsgUsuarioJaCadastrado(usuario.NomeUsuario)}");
             }
 
             var usuarioCriado = await _usuarioRepository.PostAsync(usuario);
@@ -46,7 +47,7 @@ namespace SystemBox.Service.Services
 
         public async Task DeleteAsync(int id)
         {
-            var usuario = await _usuarioRepository.GetByIdAsync(id) ?? throw new UsuarioNaoExiste("Usuário não existe no banco de dados.");
+            var usuario = await _usuarioRepository.GetByIdAsync(id) ?? throw new UsuarioNaoExiste(UsuariosConsts.MsgUsuarioNaoExiste);
             await _usuarioRepository.DeleteAsync(usuario.Id);
         }
     }
