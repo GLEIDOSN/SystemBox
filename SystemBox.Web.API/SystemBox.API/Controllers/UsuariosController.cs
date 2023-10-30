@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using SystemBox.API.Dtos;
 using SystemBox.Domain.Models;
 using SystemBox.Service.Services;
+using static System.CustomExceptions.UsuariosCustomExceptions;
 
 namespace SystemBox.API.Controllers
 {
@@ -34,59 +35,83 @@ namespace SystemBox.API.Controllers
         [HttpGet("GetById/{id}")]
         public async Task<ActionResult<UsuarioDto>> GetById(int id)
         {
-            var usuario = await _usuarioService.GetByIdAsync(id);
-
-            if (usuario == null)
+            try
             {
-                return NotFound();
+                var usuario = await _usuarioService.GetByIdAsync(id);
+                var usuarioDto = _mapper.Map<UsuarioDto>(usuario);
+
+                return Ok(usuarioDto);
             }
-
-            var usuarioDto = _mapper.Map<UsuarioDto>(usuario);
-
-            return Ok(usuarioDto);
+            catch (UsuarioNaoExiste ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Ocorreu um erro interno no servidor. [{ex.Message}]");
+            }
         }
 
         // api/usuarios POST
         [HttpPost("Post")]
         public async Task<ActionResult<UsuarioDto>> Post(Usuario usuario)
         {
-            await _usuarioService.PostAsync(usuario);
+            try
+            {
+                await _usuarioService.PostAsync(usuario);
+                var usuarioDto = _mapper.Map<UsuarioDto>(usuario);
 
-            var usuarioDto = _mapper.Map<UsuarioDto>(usuario);
-
-            return CreatedAtAction(nameof(GetById), new { id = usuario.Id }, usuarioDto);
+                return CreatedAtAction(nameof(GetById), new { id = usuario.Id }, usuarioDto);
+            }
+            catch (UsuarioJaCadastradoException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Ocorreu um erro interno no servidor. [{ex.Message}]");
+            }            
         }
 
         // api/usuarios/1 PUT
         [HttpPut("Update/{id}")]
         public async Task<ActionResult> Update(int id, Usuario usuarioInput)
         {
-            var usuario = await _usuarioService.GetByIdAsync(id);
-
-            if (usuario == null)
+            try
             {
-                return NotFound();
+                var usuario = await _usuarioService.GetByIdAsync(id);
+                await _usuarioService.UpdateAsync(id, usuarioInput);
+
+                return NoContent();
             }
-
-            await _usuarioService.UpdateAsync(id, usuarioInput);
-
-            return NoContent();
+            catch (UsuarioNaoExiste ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Ocorreu um erro interno no servidor. [{ex.Message}]");
+            }
         }
 
         // api/usuarios/1 DELETE
         [HttpDelete("Delete/{id}")]
         public async Task<ActionResult> Delete(int id)
         {
-            var usuario = await _usuarioService.GetByIdAsync(id);
-
-            if (usuario == null)
+            try
             {
-                return NotFound();
+                await _usuarioService.DeleteAsync(id);
+
+                return NoContent();
             }
-
-            await _usuarioService.DeleteAsync(id);
-
-            return NoContent();
+            catch (UsuarioNaoExiste ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Ocorreu um erro interno no servidor. [{ex.Message}]");
+            }
         }
     }
 }
