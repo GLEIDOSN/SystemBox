@@ -13,6 +13,9 @@ namespace SystemBox.Ioc
 
             // Services
             services.AddScoped<IUsuarioService, UsuarioService>();
+            services.AddScoped<ITokenService, TokenService>();
+            services.AddScoped<IDadosPLCService, DadosPLCService>();
+            services.AddScoped<EasyModbus.ModbusClient>(); // Registre ModbusClient como um serviço
         }
     }
 }

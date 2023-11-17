@@ -1,118 +1,114 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using SystemBox.API.Dtos;
+using SystemBox.API.Errors;
 using SystemBox.Domain.Consts;
 using SystemBox.Domain.Models;
 using SystemBox.Service.Services;
-using static System.CustomExceptions.UsuariosCustomExceptions;
 
 namespace SystemBox.API.Controllers
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class UsuariosController : ControllerBase
+    public class UsuariosController : BaseApiController
     {
         private readonly IUsuarioService _usuarioService;
+        private readonly ITokenService _tokenService;
+        private readonly IDadosPLCService _dadosPLCService;
         private readonly IMapper _mapper;
 
-        public UsuariosController(IUsuarioService usuarioService, IMapper mapper)
+        public UsuariosController(IUsuarioService usuarioService, ITokenService tokenService, IDadosPLCService dadosPLCService, IMapper mapper)
         {
             _usuarioService = usuarioService;
+            _tokenService = tokenService;
+            _dadosPLCService = dadosPLCService;
             _mapper = mapper;
         }
 
-        // api/usuarios GET
-        [HttpGet("GetAll")]
-        public async Task<ActionResult<IEnumerable<UsuarioDto>>> GetAll()
+        [Authorize]
+        [HttpGet("ListaUsuarios")]
+        public async Task<ActionResult<List<UsuarioDto>>> ListaUsuarios()
         {
             var usuarios = await _usuarioService.GetAllAsync();
 
-            var usuariosDto = _mapper.Map<IEnumerable<UsuarioDto>>(usuarios);
+            var usuarioDto = _mapper.Map<List<UsuarioDto>>(usuarios);
 
-            return Ok(usuariosDto);
+            return usuarioDto;
         }
 
-        // api/usuarios/1 GET
-        [HttpGet("GetById/{id}")]
-        public async Task<ActionResult<UsuarioDto>> GetById(int id)
+        [Authorize]
+        [HttpGet("getUsuarioCorrente")]
+        public async Task<ActionResult<UsuarioDto>> GetUsuarioCorrente()
         {
-            try
-            {
-                var usuario = await _usuarioService.GetByIdAsync(id);
-                var usuarioDto = _mapper.Map<UsuarioDto>(usuario);
+            var email = HttpContext.User?.Claims?.FirstOrDefault(x => x.Type == ClaimTypes.Email)?.Value;
 
-                return Ok(usuarioDto);
-            }
-            catch (UsuarioNaoExiste ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, MsgErrorsConst.ErroInternoServidor(ex.Message));
-            }
+            var usuario = await _usuarioService.GetByEmailAsync(email);
+
+            var usuarioDto = _mapper.Map<UsuarioDto>(usuario);
+
+            return usuarioDto;
         }
 
-        // api/usuarios POST
-        [HttpPost("Post")]
-        public async Task<ActionResult<UsuarioDto>> Post(Usuario usuario)
+        [Authorize]
+        [HttpGet("emailExistente")]
+        public async Task<ActionResult<bool>> CheckEmailExistsAsync([FromQuery] string email)
         {
-            try
-            {
-                await _usuarioService.PostAsync(usuario);
-                var usuarioDto = _mapper.Map<UsuarioDto>(usuario);
-
-                return CreatedAtAction(nameof(GetById), new { id = usuario.Id }, usuarioDto);
-            }
-            catch (UsuarioJaCadastradoException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, MsgErrorsConst.ErroInternoServidor(ex.Message));
-            }            
+            return await _usuarioService.GetByEmailAsync(email) != null;
         }
 
-        // api/usuarios/1 PUT
-        [HttpPut("Update/{id}")]
-        public async Task<ActionResult> Update(int id, Usuario usuarioInput)
+        [HttpPost("login")]
+        public async Task<ActionResult<UsuarioDto>> Login(LoginDto loginDto)
         {
-            try
-            {
-                var usuario = await _usuarioService.GetByIdAsync(id);
-                await _usuarioService.UpdateAsync(id, usuarioInput);
+            var usuario = await _usuarioService.GetByNomeUsuarioAsync(loginDto.NomeUsuario);
 
-                return NoContent();
-            }
-            catch (UsuarioNaoExiste ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, MsgErrorsConst.ErroInternoServidor(ex.Message));
-            }
+            if (usuario == null) return Unauthorized(new ApiResponse(401));
+
+            var result = await _usuarioService.CheckPasswordSignInAsync(usuario, loginDto.Password);
+
+            if (!result) return BadRequest(UsuariosConsts.MsgUsuarioSenhaInvalida);
+
+            var usuarioDto = _mapper.Map<UsuarioDto>(usuario);
+
+            usuarioDto.Token = _tokenService.CreateToken(usuario);
+
+            return usuarioDto;
         }
 
-        // api/usuarios/1 DELETE
-        [HttpDelete("Delete/{id}")]
-        public async Task<ActionResult> Delete(int id)
+        [Authorize]
+        [HttpPost("cadastrar")]
+        public async Task<ActionResult<UsuarioDto>> Cadastrar(CadastroUsuarioDto cadastroUsuarioDto)
         {
-            try
+            var usuario = new Usuario
             {
-                await _usuarioService.DeleteAsync(id);
+                Nome = cadastroUsuarioDto.Nome,
+                Endereco = cadastroUsuarioDto.Endereco,
+                Numero = cadastroUsuarioDto.Numero,
+                Complemento = cadastroUsuarioDto.Complemento,
+                Bairro = cadastroUsuarioDto.Bairro,
+                Cidade = cadastroUsuarioDto.Cidade,
+                Estado = cadastroUsuarioDto.Estado,
+                CEP = cadastroUsuarioDto.CEP,
+                Telefone = cadastroUsuarioDto.Telefone,
+                Celular = cadastroUsuarioDto.Celular,
+                UserName = cadastroUsuarioDto.UserName,
+                PasswordHash = cadastroUsuarioDto.Senha,
+                Email = cadastroUsuarioDto.Email
+            };
 
-                return NoContent();
-            }
-            catch (UsuarioNaoExiste ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, MsgErrorsConst.ErroInternoServidor(ex.Message));
-            }
+            var result = await _usuarioService.PostAsync(usuario);
+
+            var usuarioDto = _mapper.Map<UsuarioDto>(result);
+
+            return usuarioDto;
+        }
+
+        [HttpPost("conectar")]
+        public string Conectar()
+        {
+            int caixasAltas = _dadosPLCService.LerRegistroDeEntrada(0);
+            int caixasBaixas = _dadosPLCService.LerRegistroDeEntrada(1);
+
+            return $"Total de Caixas Altas: {caixasAltas}\r\nTotal de Caixas Baixas: {caixasBaixas}.";
         }
     }
 }

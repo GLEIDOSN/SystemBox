@@ -1,8 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity;
-
-namespace SystemBox.Domain.Models
+﻿namespace SystemBox.API.Dtos
 {
-    public class Usuario : IdentityUser
+    public class CadastroUsuarioDto
     {
         public string Nome { get; set; } = string.Empty;
         public string Endereco { get; set; } = string.Empty;
@@ -14,5 +12,8 @@ namespace SystemBox.Domain.Models
         public string CEP { get; set; } = string.Empty;
         public string Telefone { get; set; } = string.Empty;
         public string Celular { get; set; } = string.Empty;
+        public string UserName { get; set; } = string.Empty;
+        public string Senha { get; set; } = string.Empty;
+        public string? Email {  get; set; } = string.Empty;
     }
 }

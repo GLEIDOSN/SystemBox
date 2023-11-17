@@ -1,12 +1,13 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 using SystemBox.Domain.Models;
 
 namespace SystemBox.Data
 {
-    public class SystemContext : DbContext
+    public class SystemDbContext : IdentityDbContext<Usuario>
     {
-        public SystemContext(DbContextOptions<SystemContext> options) : base(options)
+        public SystemDbContext(DbContextOptions<SystemDbContext> options) : base(options)
         {
 
         }

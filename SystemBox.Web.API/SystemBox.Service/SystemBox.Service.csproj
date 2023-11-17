@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="EasyModbusTCP.NETCore" Version="1.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\System.CustomExceptions\System.CustomExceptions.csproj" />
     <ProjectReference Include="..\SystemBox.Data\SystemBox.Data.csproj" />
     <ProjectReference Include="..\SystemBox.Domain\SystemBox.Domain.csproj" />
